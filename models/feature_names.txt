@@ -1,0 +1,8 @@
+amount
+transaction_hour
+new_device
+new_recipient
+location_change
+velocity
+account_age_days
+avg_transaction_amount

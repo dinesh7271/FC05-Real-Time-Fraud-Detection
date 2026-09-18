@@ -30,19 +30,20 @@ const RiskResultPage = () => {
           <p className="text-slate-400 mb-6">No risk analysis data was received from the AI engine.</p>
           <Button onClick={() => navigate('/')}>Start New Assessment</Button>
         </div>
-      );
-    }
+      </PageContainer>
+    );
+  }
 
   const { risk_score, risk_level, explanation, reasons, is_locked, lock_id } = prediction;
 
   const getRiskColors = (level) => {
     if (level === 'HIGH') {
       return { text: 'text-rose-400', bg: 'bg-rose-500/10', border: 'border-rose-500/20', badge: 'danger', icon: <ShieldAlert className="w-12 h-12 text-rose-400" /> };
-    }
-    if (level === 'MEDIUM') {
+    } else if (level === 'MEDIUM') {
       return { text: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20', badge: 'warning', icon: <AlertTriangle className="w-12 h-12 text-amber-400" /> };
+    } else {
+      return { text: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', badge: 'success', icon: <CheckCircle className="w-12 h-12 text-emerald-400" /> };
     }
-    return { text: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', badge: 'success', icon: <CheckCircle className="w-12 h-12 text-emerald-400" /> };
   };
 
   const colors = getRiskColors(risk_level);
