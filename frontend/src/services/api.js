@@ -41,9 +41,12 @@ export const fraudService = {
    * Verify a locked transaction.
    * Endpoint: POST /security/verify
    */
-  async verifyTransaction(lockId) {
+  async verifyTransaction(lockId, verificationToken = 'USER_CONFIRMED') {
     try {
-      const response = await api.post('/security/verify', { lock_id: lockId });
+      const response = await api.post('/security/verify', {
+        lock_id: lockId,
+        verification_token: verificationToken,
+      });
       return response.data;
     } catch (error) {
       console.error('Error verifying transaction:', error);
@@ -55,9 +58,12 @@ export const fraudService = {
    * Report a transaction as fraud.
    * Endpoint: POST /security/report-fraud
    */
-  async reportFraud(lockId) {
+  async reportFraud(lockId, details = 'User confirmed this transaction was fraudulent.') {
     try {
-      const response = await api.post('/security/report-fraud', { lock_id: lockId });
+      const response = await api.post('/security/report-fraud', {
+        lock_id: lockId,
+        details,
+      });
       return response.data;
     } catch (error) {
       console.error('Error reporting fraud:', error);

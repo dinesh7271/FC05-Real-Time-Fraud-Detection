@@ -60,10 +60,10 @@ graph TD
 
 ### 1. Backend & DB
 ```bash
-cd backend
-pip install -r requirements.txt
-cp .env.example .env # Fill in MONGO_URI, GROQ_API_KEY, ENCRYPTION_KEY
-uvicorn main:app --reload
+# Run from the PROJECT ROOT directory, not from inside backend/
+pip install -r backend/requirements.txt
+cp .env.example .env  # Fill in MONGO_URI, GROQ_API_KEY, ENCRYPTION_KEY
+uvicorn backend.main:app --reload
 ```
 
 ### 2. ML Pipeline
@@ -75,9 +75,10 @@ python train.py # Trains and encrypts the model into /models
 
 ### 3. RAG Engine
 ```bash
-cd rag
-pip install -r requirements.txt
-python ingest.py # Populates ChromaDB with fraud policy documents
+# Add .txt or .md fraud policy documents to rag/documents/ (optional)
+# Run from the PROJECT ROOT:
+pip install sentence-transformers chromadb langchain-community
+python rag/ingest.py  # Populates ChromaDB with fraud policy documents
 ```
 
 ### 4. Frontend

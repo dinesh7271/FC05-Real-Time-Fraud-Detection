@@ -40,7 +40,6 @@ def train_fraud_model():
         max_depth=6,
         learning_rate=0.1,
         scale_pos_weight=spw, # Crucial for fraud detection imbalance
-        use_label_encoder=False,
         eval_metric='logloss',
         random_state=42
     )

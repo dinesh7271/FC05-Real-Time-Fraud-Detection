@@ -3,9 +3,14 @@ import logging
 from typing import List
 from langchain_groq import ChatGroq
 from langchain_community.vectorstores import Chroma
-from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_core.prompts import ChatPromptTemplate
 from dotenv import load_dotenv
+
+# Use langchain_huggingface if available (preferred), fall back to community
+try:
+    from langchain_huggingface import HuggingFaceEmbeddings
+except ImportError:
+    from langchain_community.embeddings import HuggingFaceEmbeddings
 
 load_dotenv()
 

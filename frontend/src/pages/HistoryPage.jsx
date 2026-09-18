@@ -9,6 +9,7 @@ import { fraudService } from '../services/api';
 const HistoryPage = () => {
   const [transactions, setTransactions] = useState([]);
   const [filter, setFilter] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -28,11 +29,22 @@ const HistoryPage = () => {
   };
 
   const filteredTransactions = transactions.filter(tx => {
-    if (filter === 'All') return true;
-    if (filter === 'Locked') return tx.status === 'Locked' || tx.is_locked === true;
-    if (filter === 'High Risk') return tx.riskLevel === 'HIGH' || tx.risk_level === 'HIGH';
-    if (filter === 'Normal') return tx.status === 'Normal' || (tx.riskLevel === 'LOW' || tx.risk_level === 'LOW');
-    return true;
+    const matchesFilter = (() => {
+      if (filter === 'All') return true;
+      if (filter === 'Locked') return tx.status === 'Locked' || tx.is_locked === true;
+      if (filter === 'High Risk') return tx.riskLevel === 'HIGH' || tx.risk_level === 'HIGH';
+      if (filter === 'Normal') return tx.status === 'Normal' || (tx.riskLevel === 'LOW' || tx.risk_level === 'LOW');
+      return true;
+    })();
+
+    const q = searchQuery.toLowerCase();
+    const matchesSearch = !q || (
+      (tx.id || '').toLowerCase().includes(q) ||
+      (tx.recipient || '').toLowerCase().includes(q) ||
+      (tx.location || '').toLowerCase().includes(q)
+    );
+
+    return matchesFilter && matchesSearch;
   });
 
   const getStatusBadge = (tx) => {
@@ -69,6 +81,8 @@ const HistoryPage = () => {
             <input
               type="text"
               placeholder="Search transactions..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="bg-slate-800 border border-slate-700 text-white pl-9 pr-3 py-1.5 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500/50 outline-none w-full md:w-64"
             />
           </div>

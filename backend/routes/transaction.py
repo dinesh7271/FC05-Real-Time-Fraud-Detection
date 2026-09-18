@@ -88,10 +88,16 @@ async def predict_fraud(tx: TransactionRequest):
         "lock_id": lock_id,
         "timestamp": tx.timestamp or datetime.utcnow()
     }
-    await db.db.transactions.insert_one(transaction_doc)
-
-    # Audit Log for traceability
-    await audit_service.log_event("TRANSACTION_PREDICTED", tx.user_id, transaction_doc)
+    try:
+        if db.db is not None:
+            await db.db.transactions.insert_one(transaction_doc)
+            await audit_service.log_event("TRANSACTION_PREDICTED", tx.user_id, transaction_doc)
+        else:
+            import logging
+            logging.getLogger(__name__).warning("MongoDB not connected — skipping persistence.")
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).error(f"DB write error: {e}")
 
     return PredictionResponse(
         risk_score=score,
