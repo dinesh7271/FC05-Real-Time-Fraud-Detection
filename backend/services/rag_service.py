@@ -24,27 +24,11 @@ class RAGService:
         self.model_name = os.getenv("GROQ_MODEL", "llama-3.1-70b-versatile")
         _rag_default = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "..", "rag", "knowledge_base", "chroma_db"))
         self.persist_directory = os.getenv("CHROMA_DB_PATH", _rag_default)
+        self.embeddings = None
+        self.vectorstore = None
+        self._initialized_vectorstore = False
 
-        # Initialize Embeddings (SBERT)
-        try:
-            self.embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-            logger.info("HuggingFace embeddings initialized.")
-        except Exception as e:
-            logger.error(f"Failed to load embeddings: {e}")
-            self.embeddings = None
-
-        # Initialize Vector Store
-        try:
-            self.vectorstore = Chroma(
-                persist_directory=self.persist_directory,
-                embedding_function=self.embeddings
-            )
-            logger.info("ChromaDB connected.")
-        except Exception as e:
-            logger.error(f"ChromaDB error: {e}")
-            self.vectorstore = None
-
-        # Initialize LLM (Conditional)
+        # Initialize LLM directly (very lightweight, API-based)
         self.llm = None
         if self.api_key:
             try:
@@ -57,7 +41,34 @@ class RAGService:
             except Exception as e:
                 logger.error(f"Groq initialization failed: {e}")
         else:
-            logger.warning("GROQ_API_KEY missing. RAG will use fallback explanations.")
+            logger.warning("GROQ_API_KEY missing. RAG will use template explanations.")
+
+    def _ensure_vectorstore(self):
+        """
+        Lazy load SentenceTransformer and ChromaDB only when actually needed.
+        Prevents Render 512MB OOM crash during container boot.
+        """
+        if self._initialized_vectorstore:
+            return
+        self._initialized_vectorstore = True
+
+        # Disable heavy ML embedding on memory-constrained servers if configured
+        if os.getenv("DISABLE_LOCAL_EMBEDDINGS", "false").lower() == "true":
+            logger.info("Local embeddings disabled via DISABLE_LOCAL_EMBEDDINGS=true.")
+            return
+
+        try:
+            logger.info("Lazy-loading HuggingFace embeddings...")
+            self.embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+            self.vectorstore = Chroma(
+                persist_directory=self.persist_directory,
+                embedding_function=self.embeddings
+            )
+            logger.info("ChromaDB vector store connected.")
+        except Exception as e:
+            logger.warning(f"Vector store not loaded (falling back to direct LLM/templates): {e}")
+            self.embeddings = None
+            self.vectorstore = None
 
     async def generate_explanation(self, risk_score: float, reasons: List[str], transaction_details: dict) -> str:
         """
@@ -69,7 +80,8 @@ class RAGService:
             return self._get_fallback_explanation(risk_score, reasons)
 
         try:
-            # 1. Retrieve context from ChromaDB
+            # 1. Retrieve context from ChromaDB (lazy loaded on demand)
+            self._ensure_vectorstore()
             context = ""
             if self.vectorstore and self.embeddings:
                 query = f"Fraud pattern: {', '.join(reasons)}"
