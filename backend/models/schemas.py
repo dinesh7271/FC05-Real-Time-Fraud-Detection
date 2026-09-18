@@ -27,7 +27,7 @@ class TransactionRequest(BaseModel):
     new_device: int = Field(..., ge=0, le=1)
     new_recipient: int = Field(..., ge=0, le=1)
     location_change: int = Field(..., ge=0, le=1)
-    velocity: int = Field(..., ge=0)
+    velocity: float = Field(..., ge=0)
     account_age_days: int = Field(..., ge=0)
     avg_transaction_amount: float = Field(..., ge=0)
 

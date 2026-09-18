@@ -18,15 +18,17 @@ export const fraudService = {
     try {
       // Convert boolean-like strings/checkboxes to 0 or 1 as expected by backend
       const payload = {
-        ...transactionData,
+        user_id: String(transactionData.user_id || 'USR-ANON'),
+        amount: parseFloat(transactionData.amount) || 0.01,
+        transaction_hour: Math.min(23, Math.max(0, parseInt(transactionData.transaction_hour) || 0)),
         new_device: transactionData.new_device ? 1 : 0,
         new_recipient: transactionData.new_recipient ? 1 : 0,
         location_change: transactionData.location_change ? 1 : 0,
-        amount: parseFloat(transactionData.amount),
-        transaction_hour: parseInt(transactionData.transaction_hour),
-        velocity: parseFloat(transactionData.velocity),
-        account_age_days: parseInt(transactionData.account_age_days),
-        avg_transaction_amount: parseFloat(transactionData.avg_transaction_amount),
+        velocity: parseFloat(transactionData.velocity) || 0.0,
+        account_age_days: Math.max(0, parseInt(transactionData.account_age_days) || 0),
+        avg_transaction_amount: Math.max(0, parseFloat(transactionData.avg_transaction_amount) || 0.0),
+        merchant_id: transactionData.merchant_id || null,
+        location: transactionData.location || 'Unknown',
       };
 
       const response = await api.post('/predict', payload);
