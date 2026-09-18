@@ -9,9 +9,19 @@ class MongoDB:
     db = None
 
     async def connect(self):
-        self.client = AsyncIOMotorClient(os.getenv("MONGO_URI"))
-        self.db = self.client[os.getenv("MONGO_DB_NAME")]
-        print("Connected to MongoDB successfully.")
+        uri = os.getenv("MONGO_URI")
+        db_name = os.getenv("MONGO_DB_NAME", "sentinel_fraud_db")
+        if not uri:
+            print("MONGO_URI not configured. Running without persistent database.")
+            return
+
+        try:
+            self.client = AsyncIOMotorClient(uri, serverSelectionTimeoutMS=5000)
+            self.db = self.client[db_name]
+            print(f"Connected to MongoDB database '{db_name}'.")
+        except Exception as e:
+            print(f"Could not connect to MongoDB: {e}. Running in disconnected mode.")
+            self.db = None
 
     async def close(self):
         if self.client:

@@ -9,7 +9,7 @@ load_dotenv()
 
 # Resolve model path relative to this file so it works from any working directory
 _HERE = os.path.dirname(os.path.abspath(__file__))
-_DEFAULT_MODEL_PATH = os.path.normpath(os.path.join(_HERE, "..", "..", "..", "models", "fraud_model.joblib"))
+_DEFAULT_MODEL_PATH = os.path.normpath(os.path.join(_HERE, "..", "..", "models", "fraud_model.joblib"))
 
 class RiskEngine:
     def __init__(self):

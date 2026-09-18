@@ -11,11 +11,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy backend package (build context is the project root)
+# Copy backend package, models and rag knowledge base
 COPY backend/ ./backend/
+COPY models/ ./models/
+COPY rag/ ./rag/
 
-# Expose port
+# Expose port (default 8000 or Render dynamic $PORT)
 EXPOSE 8000
 
-# Run from project root so relative imports work: backend is a package under /app/
-CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
+ENV PORT=8000
+CMD ["sh", "-c", "uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

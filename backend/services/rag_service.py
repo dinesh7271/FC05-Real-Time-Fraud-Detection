@@ -22,7 +22,8 @@ class RAGService:
     def __init__(self):
         self.api_key = os.getenv("GROQ_API_KEY")
         self.model_name = os.getenv("GROQ_MODEL", "llama-3.1-70b-versatile")
-        self.persist_directory = os.getenv("CHROMA_DB_PATH", "../rag/knowledge_base/chroma_db")
+        _rag_default = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "..", "rag", "knowledge_base", "chroma_db"))
+        self.persist_directory = os.getenv("CHROMA_DB_PATH", _rag_default)
 
         # Initialize Embeddings (SBERT)
         try:
