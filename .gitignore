@@ -28,8 +28,9 @@ dist/
 *.onnx
 *.bin
 *.weights
-models/*.joblib
-models/*.pkl
+# Whitelist trained production model for deployment
+!models/fraud_model.joblib
+!models/feature_names.txt
 
 # Data & Database
 data/*

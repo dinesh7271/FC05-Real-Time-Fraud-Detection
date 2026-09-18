@@ -35,7 +35,7 @@ app.include_router(rag.router)
 app.include_router(history.router)
 app.include_router(dashboard.router)
 
-@app.get("/")
+@app.api_route("/", methods=["GET", "HEAD"])
 async def root():
     return {
         "status": "Online",
