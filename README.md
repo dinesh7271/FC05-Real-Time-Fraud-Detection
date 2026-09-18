@@ -1,72 +1,100 @@
-# FC-05: Real-Time Financial Fraud Detection
+# SentinelFraud: Real-Time Risk Detection & Explainable AI
 
-A real-time fraud detection system designed for high-throughput financial transactions, utilizing machine learning to identify suspicious patterns and alert systems instantly.
+SentinelFraud is an advanced financial fraud detection system that combines high-performance machine learning with Generative AI (RAG) to provide not just detection, but **decision support**. By integrating XGBoost for risk scoring and Groq-powered LLMs for explanation, the system ensures transparency in fraud mitigation.
 
-## 🚀 Project Overview
-This project implements an end-to-end pipeline for detecting fraudulent transactions. It combines a high-performance FastAPI backend, a React-based monitoring dashboard, and a Scikit-Learn/XGBoost machine learning model.
+## 🎯 New Project Direction
+Following jury feedback, the system has pivoted from a simple detection tool to a **Comprehensive Risk Management Framework**. It now emphasizes:
+- **Transparency**: Using RAG to explain *why* a transaction was flagged.
+- **Prevention**: Implementing an automatic "Temporary Lock" for high-risk events.
+- **Security**: AES-256 encryption for sensitive datasets and models.
+- **Recovery**: A two-way verification flow allowing users to recover accounts or report fraud.
 
 ## 🏗 Architecture
 
 ```mermaid
 graph TD
-    A[Transaction Source] -->|API Request| B[FastAPI Backend]
-    B -->|Feature Extraction| C[ML Inference Service]
-    C -->|Model Prediction| B
-    B -->|Fraud Alert| D[Monitoring Dashboard]
-    B -->|Log Transaction| E[(Database)]
-    C -.->|Periodic Retraining| F[ML Training Pipeline]
-    G[(Dataset/CSV)] --> F
-    F -->|Update Model| C
+    A[Transaction] --> B[FastAPI Backend]
+    B --> C{XGBoost Risk Model}
+    
+    C -->|Low Risk| D[Process Transaction]
+    C -->|Medium Risk| E[Flag for Review]
+    C -->|High Risk| F[Temporary Lock Account]
+    
+    F --> G[RAG Engine: LangChain + ChromaDB + Groq]
+    G --> H[Explainable AI Decision Support]
+    
+    H --> I[User Notification]
+    I --> J{User Action}
+    J -->|Verify Identity| K[Unlock Account]
+    J -->|Report Fraud| L[Permanent Block & Alert]
+    
+    subgraph "Security Layer"
+        M[AES-256 Encryption] --> N[Dataset]
+        M --> O[Model Binaries]
+    end
+    
+    B <--> P[(MongoDB)]
 ```
 
 ## 🛠 Tech Stack
 
-| Layer | Technology |
-| :--- | :--- |
-| **Frontend** | React, Vite, Tailwind CSS, Recharts |
-| **Backend** | FastAPI, Pydantic, Uvicorn |
-| **ML** | Python, Scikit-Learn, XGBoost, Pandas, NumPy |
-| **Deployment** | Docker, Docker Compose |
-| **Data** | CSV (Initial), SQLite/PostgreSQL (Target) |
+| Component | Technology | Purpose |
+| :--- | :--- | :--- |
+| **Risk Engine** | XGBoost | High-precision fraud probability scoring |
+| **Explainability** | Groq + LangChain + ChromaDB | RAG-based explanation for flagged transactions |
+| **Backend** | FastAPI | High-performance async API |
+| **Frontend** | React + Vite + Tailwind | Real-time monitoring & user verification portal |
+| **Database** | MongoDB | Scalable document storage for logs and users |
+| **Security** | PyCryptodome (AES-256) | End-to-end encryption of models and data |
+| **Infrastructure** | Docker + Docker Compose | Containerized deployment |
+
+## ✨ Key Features
+
+- **⚡ Real-Time Risk Scoring**: XGBoost model evaluates transactions in milliseconds.
+- **🤖 RAG-Powered Explanations**: Instead of a "Fraud" label, the system provides a natural language explanation (e.g., *"Transaction flagged due to unusual location shift and high amount compared to user history"*).
+- **🔒 Automated Temporary Lock**: Instant account freezing when risk exceeds a critical threshold to prevent capital flight.
+- **🛡️ AES-256 Model Security**: Protects the proprietary ML model and sensitive PII data from unauthorized access.
+- **🔄 Recovery Workflow**: A secure portal where users can verify their identity to unlock accounts or report fraud to the bank.
 
 ## 🏃 How to Run
 
-### Prerequisites
-- Python 3.9+
-- Node.js 18+
-- Docker & Docker Compose
-
-### 1. Backend Setup
+### 1. Backend & DB
 ```bash
 cd backend
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-cp .env.example .env
+cp .env.example .env # Fill in MONGO_URI, GROQ_API_KEY, ENCRYPTION_KEY
 uvicorn main:app --reload
 ```
 
-### 2. Frontend Setup
+### 2. ML Pipeline
+```bash
+cd ml
+pip install -r requirements.txt
+python train.py # Trains and encrypts the model into /models
+```
+
+### 3. RAG Engine
+```bash
+cd rag
+pip install -r requirements.txt
+python ingest.py # Populates ChromaDB with fraud policy documents
+```
+
+### 4. Frontend
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-### 3. ML Model Setup
-```bash
-cd ml
-pip install -r requirements.txt
-python train.py
-```
-
-## 👥 Team
-- **Frontend Developer**: [Name]
-- **Backend Developer**: [Name]
-- **ML Engineer**: [Name]
+## 👥 Team Roles
+- **ML Engineer**: Risk model development, AES encryption, and model optimization.
+- **Backend & Security**: FastAPI orchestration, MongoDB integration, and Lock/Unlock logic.
+- **Frontend & AI**: React Dashboard and RAG integration for explainable AI.
 
 ## 🎬 Demo Flow
-1. **Transaction Submission**: A transaction is sent to the `/predict` endpoint.
-2. **Real-time Analysis**: The backend calls the ML model to get a fraud probability score.
-3. **Alerting**: If the score exceeds the threshold, the transaction is flagged as "Fraudulent".
-4. **Visualization**: The React dashboard updates in real-time to show the new transaction and overall fraud metrics.
+
+1. **Normal Flow**: User makes a transaction $\rightarrow$ XGBoost (Low Risk) $\rightarrow$ Transaction processed.
+2. **Fraud Flow**: User makes a transaction $\rightarrow$ XGBoost (High Risk) $\rightarrow$ **Account Locked**.
+3. **Explanation**: The system queries ChromaDB and Groq $\rightarrow$ Displays: *"Your account was locked because the transaction from [City, Country] is inconsistent with your spending pattern."*
+4. **Resolution**: User logs into the portal $\rightarrow$ Uploads ID / Verifies $\rightarrow$ **Account Unlocked**.
