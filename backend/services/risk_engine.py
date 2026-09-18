@@ -16,33 +16,53 @@ class RiskEngine:
 
     def load_model(self):
         try:
-            self.model = joblib.load(self.model_path)
-            print(f"Risk model loaded from {self.model_path}")
+            if os.path.exists(self.model_path):
+                self.model = joblib.load(self.model_path)
+                print(f"Risk model loaded successfully from {self.model_path}")
+            else:
+                print(f"Model file not found at {self.model_path}. Running in Mock Mode.")
         except Exception as e:
-            print(f"Warning: Could not load risk model: {e}. Using mock mode.")
+            print(f"Error loading model: {e}. Running in Mock Mode.")
 
     def predict(self, features: list) -> Tuple[float, RiskLevel, List[str]]:
         """
         Predicts the risk score and level.
-        Returns: (score, level, reasons)
+        features: [amount, transaction_hour, new_device, new_recipient, location_change, velocity, account_age_days, avg_transaction_amount]
         """
+        reasons = []
+
+        # Rule-based risk analysis ( complements the ML model )
+        # Feature mapping for readability
+        amount, tx_hour, new_dev, new_rec, loc_chg, vel, age, avg_amt = features
+
+        if amount > avg_amt * 5:
+            reasons.append("Transaction amount significantly exceeds historical average")
+        if loc_chg == 1:
+            reasons.append("Geographic location shift detected")
+        if new_dev == 1 and amount > 1000:
+            reasons.append("High-value transaction from an unrecognized device")
+        if vel > 5:
+            reasons.append("High transaction velocity (too many requests in short time)")
+        if tx_hour < 5 or tx_hour > 23:
+            reasons.append("Transaction occurring during unusual hours")
+
         if self.model is None:
-            # Mock logic for demo if model file is missing
-            score = 0.85 if features[0] > 1000 else 0.1
-            reasons = ["Mock: High amount"] if score > 0.7 else ["Low risk transaction"]
+            # Mock prediction logic for development
+            # Trigger high risk if rules flagged > 2 things or amount is huge
+            score = 0.85 if (len(reasons) >= 2 or amount > 10000) else 0.15
+            if not reasons:
+                reasons.append("Low risk patterns detected")
         else:
             # Real XGBoost prediction
-            # Expects 2D array
             data = np.array(features).reshape(1, -1)
             score = float(self.model.predict_proba(data)[0][1])
 
-            reasons = []
             if score > self.threshold:
-                reasons.append("High probability of fraud detected by XGBoost")
+                reasons.append("ML Model identified high-probability fraud pattern")
             elif score > 0.4:
-                reasons.append("Moderate risk patterns identified")
-            else:
-                reasons.append("Transaction aligns with normal patterns")
+                reasons.append("ML Model identified moderate risk")
+            elif not reasons:
+                reasons.append("Standard transaction profile")
 
         # Determine Risk Level
         if score >= self.threshold:
